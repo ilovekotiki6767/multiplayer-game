@@ -29,8 +29,6 @@ typedef struct {
     float m[16];
 } matrix;
 
-typedef struct camera camera;
-
 float math_clamp(float n, float lower, float upper);
 
 vec2 math_vec2_add(vec2 a, vec2 b);
@@ -66,6 +64,6 @@ void math_matrix_print(matrix *m);
 
 void math_matrix_orthographic(matrix *m, float left, float right, float bottom,
                               float top, float near, float far);
-void math_matrix_get_orthographic(camera *cam, u32 w, u32 h, matrix *m);
+void math_matrix_get_orthographic(u32 w, u32 h, matrix *m);
 
 #endif // CMAHTH_H

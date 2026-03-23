@@ -157,9 +157,9 @@ void math_matrix_orthographic(matrix *m, float left, float right, float bottom,
                   }};
 }
 
-void math_matrix_get_orthographic(camera *c, u32 w, u32 h, matrix *m) {
-    float half_w = (w / c->zoom) * 0.5f;
-    float half_h = (h / c->zoom) * 0.5f;
+void math_matrix_get_orthographic(u32 w, u32 h, matrix *m) {
+    float half_w = w * 0.5f;
+    float half_h = h * 0.5f;
 
     math_matrix_orthographic(m, -half_w, half_w, -half_h, half_h, -1.0f, 1.0f);
 }

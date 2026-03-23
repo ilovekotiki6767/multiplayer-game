@@ -6,8 +6,11 @@
 
 #include <GL/glx.h>
 #include <X11/Xlib.h>
+#include <libgen.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <unistd.h>
 
 static Display *display;
 static Window window;
@@ -178,6 +181,9 @@ static key translate_key_code(const unsigned int keycode) {
 }
 
 u0 initialize(u0) {
+    // set cwd
+    chdir(dirname(realpath("/proc/self/exe", NULL)));
+
     width = 1280;
     height = 720;
 

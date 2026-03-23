@@ -110,11 +110,6 @@ int main(int argc, char **argv) {
     u32 w, h;
     get_window_size(&w, &h);
 
-    camera cam = {
-        .pos = {0, 0},
-        .zoom = 1.0,
-    };
-
     f32 off_x = w * 0.25f;
     f32 off_y = h * 0.25f;
 
@@ -123,20 +118,22 @@ int main(int argc, char **argv) {
                             0.0f,   off_y,  0.0f, 0.5f, 1.0f};
     matrix m;
     math_matrix_identity(&m);
-    math_matrix_get_orthographic(&cam, w, h, &m);
+    math_matrix_get_orthographic(w, h, &m);
 
     // TODO: not relative paths
     font_id font =
         font_initialize("../assets/fonts/AdwaitaSans-Regular.ttf", 32);
+    texture_id tex = texture_initialize("../assets/images/test.png");
 
     while (update()) {
         clear_color(BLACK);
-        draw_mesh(vertices, 3, m.m, NO_TEXTURE, WHITE);
-        draw_text("Test hello i like edging", 0, 0, font, 1.0f, RED);
+        draw_mesh(vertices, 3, m.m, tex, WHITE);
+        draw_text("Test hello i like edging", 20, 0, font, 1.0f, RED);
 
         swap_buffers();
     }
 
+    texture_deinitialize(tex);
     font_deinitialize(font);
 
     close(sock);
