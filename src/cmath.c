@@ -1,0 +1,145 @@
+
+
+#include "cmath.h"
+#include "platform.h"
+#include "renderer.h"
+
+#include <math.h>
+#include <stdio.h>
+
+float math_clamp(float n, float lower, float upper) {
+    if (n < lower)
+        return lower;
+    if (n > upper)
+        return upper;
+    return n;
+}
+
+vec2 math_vec2_add(vec2 a, vec2 b) { return (vec2){a.x + b.x, a.y + b.y}; }
+
+vec2 math_vec2_subtract(vec2 a, vec2 b) { return (vec2){a.x - b.x, a.y - b.y}; }
+
+vec2 math_vec2_scale(vec2 v, float scalar) {
+    return (vec2){v.x * scalar, v.y * scalar};
+}
+
+vec2 math_vec2_rotate(vec2 v, float angle) {
+    float c = cosf(angle);
+    float s = sinf(angle);
+    return (vec2){
+        .x = v.x * c - v.y * s,
+        .y = v.x * s + v.y * c,
+    };
+}
+
+float math_vec2_length(vec2 v) { return sqrtf(v.x * v.x + v.y * v.y); }
+
+vec2 math_vec2_norm(vec2 v) {
+    float len = math_vec2_length(v);
+
+    if (len == 0.0f) { /* if that even works with float precision */
+        return (vec2){0, 0};
+    }
+
+    return (vec2){
+        .x = v.x / len,
+        .y = v.y / len,
+    };
+}
+
+float math_vec2_distance(vec2 a, vec2 b) {
+    vec2 delta = math_vec2_subtract(a, b);
+    return math_vec2_length(delta);
+}
+
+float math_vec2_dot(vec2 a, vec2 b) { return a.x * b.x + a.y * b.y; }
+
+float math_vec2_angle_cos(vec2 a, vec2 b) {
+    return math_vec2_dot(a, b) / (math_vec2_length(a) * math_vec2_length(b));
+}
+
+float math_vec2_angle(vec2 a, vec2 b) {
+    return acosf(math_vec2_angle_cos(a, b));
+}
+
+vec2 math_vec2_mul_matrix(vec2 vec, matrix *m) {
+
+    vec4 v = (vec4){
+        vec.x,
+        vec.y,
+        0.0f,
+        0.0f,
+    };
+
+    vec2 r;
+
+    r.x = m->m[0] * v.x + m->m[4] * v.y + m->m[8] * v.z + m->m[12] * v.w;
+    r.y = m->m[1] * v.x + m->m[5] * v.y + m->m[9] * v.z + m->m[13] * v.w;
+
+    return r;
+}
+
+vec2i math_vec2_to_vec2i(vec2 v) { return (vec2i){(int)v.x, (int)v.y}; }
+
+vec2 math_vec2i_to_vec2(vec2i v) {
+    return (vec2){
+        (float)v.x,
+        (float)v.y,
+    };
+}
+
+void math_matrix_identity(matrix *m) {
+    *m = (matrix){.m = {[0] = 1.0f, [5] = 1.0f, [10] = 1.0f, [15] = 1.0f}};
+}
+
+void math_matrix_translate(matrix *m, const float x, const float y,
+                           const float z) {
+    math_matrix_identity(m);
+    m->m[12] = x;
+    m->m[13] = y;
+    m->m[14] = z;
+}
+
+void math_matrix_scale(matrix *m, const float x, const float y, const float z) {
+    *m = (matrix){.m = {[0] = x, [5] = y, [10] = z, [15] = 1.0f}};
+}
+
+void math_matrix_rotate_2d(matrix *m, float angle) {
+    float theta = DEG2RAD(angle);
+
+    *m = (matrix){.m = {
+                      [0] = cos(theta),
+                      [1] = -sin(theta),
+                      [4] = sin(theta),
+                      [5] = cos(theta),
+                      [10] = 1.0f,
+                      [15] = 1.0f,
+                  }};
+}
+
+/* TODO: probaly optimize or smth */
+void math_matrix_mul(matrix *out, matrix *a, matrix *b) {
+    for (int r = 0; r < 4; r++) {
+        for (int c = 0; c < 4; c++) {
+            float sum = 0.0f;
+            for (int k = 0; k < 4; k++) {
+                sum += a->m[k * 4 + r] * b->m[c * 4 + k];
+            }
+            out->m[c * 4 + r] = sum;
+        }
+    }
+}
+
+void math_vec2_print(vec2 v) { printf("Vec2: (%.4f, %.4f)\n", v.x, v.y); }
+
+void math_vec4_print(vec4 v) {
+    printf("Vec4: (%.4f, %.4f, %.4f, %.4f)\n", v.x, v.y, v.z, v.w);
+}
+
+void math_matrix_print(matrix *m) {
+    printf("Matrix:\n");
+    for (int i = 0; i < 4; i++) {
+        printf("\tRow %d: [%.4f, %.4f, %.4f, %.4f]\n", i + 1, m->m[i + 0],
+               m->m[i + 1], m->m[i + 2], m->m[i + 3]);
+    }
+}

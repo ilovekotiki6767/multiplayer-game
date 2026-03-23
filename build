@@ -15,6 +15,6 @@ rm stbi.o
 cc -o multiplayer_game/multiplayer_game_server src/server.c \
    -Wall -Wextra -pedantic
 
-cc -o multiplayer_game/multiplayer_game_client src/client.c src/renderer.c \
+cc -o multiplayer_game/multiplayer_game_client src/client.c src/renderer.c src/platform/x11.c src/cmath.c \
    -Wall -Wextra -pedantic -g -Ilib -I/usr/include/freetype2 \
-   -Lmultiplayer_game -lX11 -lglad -lstbi -lfreetype -lm
+   -Lmultiplayer_game -lX11 -lGL -lglad -lstbi -lfreetype -lm

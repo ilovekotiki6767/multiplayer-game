@@ -10,68 +10,15 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "types.h"
+#include "cmath.h"
+#include "platform.h"
+#include "renderer.h"
 
 #define BUF_SIZE 1024
 
-static Display *display;
-static Atom wm_delete_window;
-
-static u32 window_width = 1280;
-static u32 window_height = 720;
-
-void get_window_size(u32 *w, u32 *h) {
-    *w = window_width;
-    *h = window_height;
-}
-
-bool update(void) {
-    XEvent event;
-
-    while (XPending(display)) {
-        XNextEvent(display, &event);
-
-        switch (event.type) {
-        case ClientMessage: {
-            if ((Atom)event.xclient.data.l[0] == wm_delete_window) {
-                return false;
-            }
-        } break;
-        case ConfigureNotify: {
-            window_width = event.xconfigure.width;
-            window_height = event.xconfigure.height;
-        } break;
-        }
-    }
-
-    return true;
-}
-
 int main(int argc, char **argv) {
-    display = XOpenDisplay(NULL);
-
-    if (!display) {
-        fprintf(stderr, "cannot open display\n");
-
-        return 1;
-    }
-
-    int screen = DefaultScreen(display);
-    Window root = RootWindow(display, screen);
-
-    Window window = XCreateSimpleWindow(display, root, 0, 0, 1280, 720, 2,
-                                        BlackPixel(display, screen),
-                                        WhitePixel(display, screen));
-    XStoreName(display, window, "Game");
-    XSelectInput(display, window,
-                 ExposureMask | KeyPressMask | StructureNotifyMask);
-
-    // handle polite close request so we are not force-killed by the window
-    // manager
-    wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(display, window, &wm_delete_window, 1);
-
-    XMapWindow(display, window);
+    initialize();
+    initialize_gl();
 
     char *ip = "127.0.0.1";
     if (argc > 1) {
@@ -160,13 +107,25 @@ int main(int argc, char **argv) {
     buf[n] = '\0';
     printf("recv %zd bytes: %s\n", n, buf);
 
+    u32 w, h;
+    get_window_size(&w, &h);
+    w *= 0.5f;
+    h *= 0.5f;
+
+    const f32 vertices[] = {-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, 0.0f,
+                            1.0f,  0.0f,  0.0f, 0.5f, 0.0f, 0.5f, 1.0f};
+    matrix m;
+    math_matrix_identity(&m);
+
     while (update()) {
+        clear_color(BLACK);
+        draw_mesh(vertices, 3, m.m, NO_TEXTURE, WHITE);
+
+        swap_buffers();
     }
 
     close(sock);
-
-    XDestroyWindow(display, window);
-    XCloseDisplay(display);
+    quit();
 
     return 0;
 }
