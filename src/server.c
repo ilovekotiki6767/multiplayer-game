@@ -74,12 +74,12 @@ int main(void) {
            continue;
        }
 
-       char client_ip[INET_ADDRSTRLEN];
-       if (inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip)) == NULL) {
+       char ip[INET_ADDRSTRLEN];
+       if (inet_ntop(AF_INET, &client_addr.sin_addr, ip, sizeof(ip)) == NULL) {
 
            fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
 
-           snprintf(client_ip, sizeof(client_ip), "?.?.?.?");
+           snprintf(ip, sizeof(ip), "?.?.?.?");
 
        }
 
@@ -97,6 +97,8 @@ int main(void) {
        if (sent != n) {
            fprintf(stderr, "sendto: short write\n");
        }
+
+       printf("sent %zd bytes to %s:%d\n", sent, ip, htons(client_addr.sin_port));
    }
 
    close(sock);
