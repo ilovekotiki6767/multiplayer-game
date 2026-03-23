@@ -2,9 +2,19 @@
 
 mkdir -p multiplayer_game
 
+# GLAD
+cc -o glad.o -c lib/glad/glad.c -Ilib
+ar rcs multiplayer_game/libglad.a glad.o
+rm glad.o
+
+# STBI
+cc -o stbi.o -c lib/stbi/stb_image.c -Ilib
+ar rcs multiplayer_game/libstbi.a stbi.o
+rm stbi.o
+
 cc -o multiplayer_game/multiplayer_game_server src/server.c \
    -Wall -Wextra -pedantic
 
-cc -o multiplayer_game/multiplayer_game_client src/client.c \
-   -Wall -Wextra -pedantic -g \
-   -lX11
+cc -o multiplayer_game/multiplayer_game_client src/client.c src/renderer.c \
+   -Wall -Wextra -pedantic -g -Ilib -I/usr/include/freetype2 \
+   -Lmultiplayer_game -lX11 -lglad -lstbi -lfreetype -lm
