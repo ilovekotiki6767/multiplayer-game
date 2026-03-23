@@ -1,0 +1,7 @@
+#!/bin/sh
+
+mkdir -p multiplayer_game
+
+cc -o multiplayer_game/multiplayer_game src/server.c \
+   -Wall -Wextra -pedantic
+
