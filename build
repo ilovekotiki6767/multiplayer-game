@@ -6,4 +6,5 @@ cc -o multiplayer_game/multiplayer_game_server src/server.c \
    -Wall -Wextra -pedantic
 
 cc -o multiplayer_game/multiplayer_game_client src/client.c \
-   -Wall -Wextra -pedantic
+   -Wall -Wextra -pedantic -g \
+   -lX11
