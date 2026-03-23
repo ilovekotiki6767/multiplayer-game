@@ -418,6 +418,7 @@ u0 draw_text(const char *string, u32 x, const u32 y, const font_id id,
     glBindVertexArray(text.vao);
     glBindBuffer(GL_ARRAY_BUFFER, text.vbo);
 
+    glDisable(GL_DEPTH_TEST);
     for (const char *c = string; *c; c++) {
         const u8 ch = (u8)*c;
         if (ch >= 128) {
@@ -450,6 +451,7 @@ u0 draw_text(const char *string, u32 x, const u32 y, const font_id id,
 
         x += (u32)((f32)glyph->advance * sdf_scale);
     }
+    glEnable(GL_DEPTH_TEST);
 }
 
 u0 draw_mesh(const f32 *vertices, const u32 vertex_count, const f32 *mvp,

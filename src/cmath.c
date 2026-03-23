@@ -143,3 +143,23 @@ void math_matrix_print(matrix *m) {
                m->m[i + 1], m->m[i + 2], m->m[i + 3]);
     }
 }
+
+void math_matrix_orthographic(matrix *m, float left, float right, float bottom,
+                              float top, float near, float far) {
+    *m = (matrix){.m = {
+                      [0] = 2.0f / (right - left),
+                      [5] = 2.0f / (top - bottom),
+                      [10] = 2.0f / (near - far),
+                      [15] = 1.0f,
+                      [12] = (left + right) / (left - right),
+                      [13] = (bottom + top) / (bottom - top),
+                      [14] = (near + far) / (near - far),
+                  }};
+}
+
+void math_matrix_get_orthographic(camera *c, u32 w, u32 h, matrix *m) {
+    float half_w = (w / c->zoom) * 0.5f;
+    float half_h = (h / c->zoom) * 0.5f;
+
+    math_matrix_orthographic(m, -half_w, half_w, -half_h, half_h, -1.0f, 1.0f);
+}

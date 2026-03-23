@@ -13,6 +13,12 @@ typedef u32 font_id;
 typedef u32 texture_id;
 #define NO_TEXTURE UINT32_MAX
 
+// gets typedef in cmath.h
+struct camera {
+    vec2 pos;
+    f32 zoom;
+};
+
 font_id font_initialize(const char *path, u32 size);
 
 u0 font_deinitialize(font_id font);

@@ -3,6 +3,8 @@
 #ifndef CMAHTH_H
 #define CMAHTH_H
 
+#include "types.h"
+
 #define RAD2DEG(x) (x * 180.0f / M_PI)
 #define DEG2RAD(x) (x * M_PI / 180.0f)
 
@@ -26,6 +28,8 @@ typedef struct {
 typedef struct {
     float m[16];
 } matrix;
+
+typedef struct camera camera;
 
 float math_clamp(float n, float lower, float upper);
 
@@ -59,5 +63,9 @@ void math_matrix_mul(matrix *out, matrix *a, matrix *b);
 void math_vec2_print(vec2 v);
 void math_vec4_print(vec4 v);
 void math_matrix_print(matrix *m);
+
+void math_matrix_orthographic(matrix *m, float left, float right, float bottom,
+                              float top, float near, float far);
+void math_matrix_get_orthographic(camera *cam, u32 w, u32 h, matrix *m);
 
 #endif // CMAHTH_H
