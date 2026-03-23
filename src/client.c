@@ -1,17 +1,29 @@
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <X11/Xlib.h>
+#include <unistd.h>
+
+#include "types.h"
 
 #define BUF_SIZE 1024
 
 static Display *display;
 static Atom wm_delete_window;
+
+static u32 window_width = 1280;
+static u32 window_height = 720;
+
+void get_window_size(u32 *w, u32 *h) {
+    *w = window_width;
+    *h = window_height;
+}
 
 bool update(void) {
     XEvent event;
@@ -24,6 +36,10 @@ bool update(void) {
             if ((Atom)event.xclient.data.l[0] == wm_delete_window) {
                 return false;
             }
+        } break;
+        case ConfigureNotify: {
+            window_width = event.xconfigure.width;
+            window_height = event.xconfigure.height;
         } break;
         }
     }
@@ -43,11 +59,15 @@ int main(int argc, char **argv) {
     int screen = DefaultScreen(display);
     Window root = RootWindow(display, screen);
 
-    Window window = XCreateSimpleWindow(display, root, 0, 0, 1280, 720, 2, BlackPixel(display, screen), WhitePixel(display, screen));
+    Window window = XCreateSimpleWindow(display, root, 0, 0, 1280, 720, 2,
+                                        BlackPixel(display, screen),
+                                        WhitePixel(display, screen));
     XStoreName(display, window, "Game");
-    XSelectInput(display, window, ExposureMask | KeyPressMask | StructureNotifyMask);
+    XSelectInput(display, window,
+                 ExposureMask | KeyPressMask | StructureNotifyMask);
 
-    // handle polite close request so we are not force-killed by the window manager
+    // handle polite close request so we are not force-killed by the window
+    // manager
     wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(display, window, &wm_delete_window, 1);
 
@@ -66,7 +86,8 @@ int main(int argc, char **argv) {
     }
 
     {
-        // set recv timeout so we do not block forever if the server does not respond
+        // set recv timeout so we do not block forever if the server does not
+        // respond
         struct timeval tv = {
             .tv_sec = 5,
             .tv_usec = 0,
@@ -92,7 +113,8 @@ int main(int argc, char **argv) {
     char *message = "hello";
     size_t message_len = strlen(message);
 
-    ssize_t sent = sendto(sock, message, message_len, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    ssize_t sent = sendto(sock, message, message_len, 0,
+                          (struct sockaddr *)&server_addr, sizeof(server_addr));
 
     if (sent == -1) {
         fprintf(stderr, "sendto: %s\n", strerror(errno));
@@ -111,7 +133,8 @@ int main(int argc, char **argv) {
     socklen_t recv_addr_len = sizeof(recv_addr);
     memset(&recv_addr, 0, sizeof(recv_addr));
 
-    ssize_t n = recvfrom(sock, buf, sizeof(buf) - 1, 0, (struct sockaddr *)&recv_addr, &recv_addr_len);
+    ssize_t n = recvfrom(sock, buf, sizeof(buf) - 1, 0,
+                         (struct sockaddr *)&recv_addr, &recv_addr_len);
 
     if (n == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -125,7 +148,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (recv_addr.sin_addr.s_addr != server_addr.sin_addr.s_addr || recv_addr.sin_port != server_addr.sin_port) {
+    if (recv_addr.sin_addr.s_addr != server_addr.sin_addr.s_addr ||
+        recv_addr.sin_port != server_addr.sin_port) {
         fprintf(stderr, "recvfrom: response came from an unexpected source");
 
         close(sock);
