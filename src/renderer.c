@@ -1,4 +1,5 @@
 
+#include "platform.h"
 #include "renderer.h"
 
 #include <glad/glad.h>
@@ -20,8 +21,7 @@ typedef struct {
     GLuint vbo;
 } pipeline;
 
-typedef struct {
-    // number of floats
+typedef struct { // number of floats
     u32 size;
 } attribute;
 
@@ -173,7 +173,10 @@ static GLuint magic_pixel = 0;
 #define SDF_SPREAD 8
 
 u0 initialize_gl(u0) {
-    gladLoadGL();
+    if (!gladLoadGLLoader((GLADloadproc)get_proc_address())) {
+        fprintf(stderr, "failed to initialize glad\n");
+        return;
+    }
 
     text =
         create_pipeline(text_vertex_shader_source, text_fragment_shader_source,

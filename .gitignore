@@ -1,2 +1,4 @@
 # build output directory
 multiplayer_game
+.cache
+*.json

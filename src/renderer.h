@@ -1,6 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include "cmath.h"
 #include "types.h"
 
 typedef u32 color;

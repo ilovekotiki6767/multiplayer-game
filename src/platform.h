@@ -2,6 +2,7 @@
 #define GAME_PLATFORM_H
 
 #include "types.h"
+#include <glad/glad.h>
 
 typedef u32 key;
 
@@ -118,4 +119,6 @@ u0 clear_text_input(u0);
 
 bool has_text_input(u0);
 
-#endif //GAME_PLATFORM_H
+GLADloadproc get_proc_address(u0);
+
+#endif // GAME_PLATFORM_H

@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "cmath.h"
 #include "platform.h"
 #include "renderer.h"
 
@@ -106,7 +107,21 @@ int main(int argc, char **argv) {
     buf[n] = '\0';
     printf("recv %zd bytes: %s\n", n, buf);
 
+    u32 w, h;
+    get_window_size(&w, &h);
+    w *= 0.5f;
+    h *= 0.5f;
+
+    const f32 vertices[] = {-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, 0.0f,
+                            1.0f,  0.0f,  0.0f, 0.5f, 0.0f, 0.5f, 1.0f};
+    matrix m;
+    math_matrix_identity(&m);
+
     while (update()) {
+        clear_color(BLACK);
+        draw_mesh(vertices, 3, m.m, NO_TEXTURE, WHITE);
+
+        swap_buffers();
     }
 
     close(sock);
