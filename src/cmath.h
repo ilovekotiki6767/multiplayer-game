@@ -39,6 +39,7 @@ typedef struct {
 } matrix;
 
 float math_clamp(float n, float lower, float upper);
+int math_clampi(int n, int lower, int upper);
 
 vec2 math_vec2_add(vec2 a, vec2 b);
 vec2 math_vec2_subtract(vec2 a, vec2 b);

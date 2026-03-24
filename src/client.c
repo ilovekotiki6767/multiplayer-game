@@ -2,6 +2,7 @@
 #include <X11/Xlib.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -32,16 +33,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    {
-        // set recv timeout so we do not block forever if the server does not
-        // respond
-        struct timeval tv = {
-            .tv_sec = 5,
-            .tv_usec = 0,
-        };
-        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) == -1) {
-            fprintf(stderr, "setsockopt: %s\n", strerror(errno));
-        }
+    const i32 opt = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
+
+    i32 flags = fcntl(sock, F_GETFL, 0);
+    if (flags >= 0) {
+        fcntl(sock, F_SETFL, flags | O_NONBLOCK);
     }
 
     struct sockaddr_in server_addr;
@@ -75,38 +72,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "sendto: short write\n");
     }
 
-    unsigned char buf[BUF_SIZE];
-    struct sockaddr_in recv_addr;
-    socklen_t recv_addr_len = sizeof(recv_addr);
-    memset(&recv_addr, 0, sizeof(recv_addr));
-
-    ssize_t n = recvfrom(sock, buf, sizeof(buf) - 1, 0,
-                         (struct sockaddr *)&recv_addr, &recv_addr_len);
-
-    if (n == -1) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            fprintf(stderr, "recvfrom: timeout waiting for response\n");
-        } else {
-            fprintf(stderr, "recvfrom: %s\n", strerror(errno));
-        }
-
-        close(sock);
-
-        return 1;
-    }
-
-    if (recv_addr.sin_addr.s_addr != server_addr.sin_addr.s_addr ||
-        recv_addr.sin_port != server_addr.sin_port) {
-        fprintf(stderr, "recvfrom: response came from an unexpected source");
-
-        close(sock);
-
-        return 1;
-    }
-
-    buf[n] = '\0';
-    printf("recv %zd bytes: %s\n", n, buf);
-
     // TODO: not relative paths
     font_id font =
         font_initialize("../assets/fonts/AdwaitaSans-Regular.ttf", 32);
@@ -117,6 +82,17 @@ int main(int argc, char **argv) {
     render_obj texture = TEXTURE(VEC2(-100, 0), 150.0f, tex);
 
     while (update()) {
+        unsigned char buf[BUF_SIZE];
+        struct sockaddr_in recv_addr;
+        socklen_t recv_addr_len = sizeof(recv_addr);
+        memset(&recv_addr, 0, sizeof(recv_addr));
+
+        ssize_t n = recvfrom(sock, buf, sizeof(buf) - 1, 0,
+                             (struct sockaddr *)&recv_addr, &recv_addr_len);
+        if (n != -1) {
+            buf[n] = '\0';
+            printf("recv %zd bytes: %s\n", n, buf);
+        }
         clear_color(BLACK);
 
         // todo add depth (so they actually can overlap)
