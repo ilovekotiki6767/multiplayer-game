@@ -107,28 +107,22 @@ int main(int argc, char **argv) {
     buf[n] = '\0';
     printf("recv %zd bytes: %s\n", n, buf);
 
-    u32 w, h;
-    get_window_size(&w, &h);
-
-    f32 off_x = w * 0.25f;
-    f32 off_y = h * 0.25f;
-
-    const f32 vertices[] = {-off_x, -off_y, 0.0f, 0.0f, 0.0f,
-                            off_x,  -off_y, 0.0f, 1.0f, 0.0f,
-                            0.0f,   off_y,  0.0f, 0.5f, 1.0f};
-    matrix m;
-    math_matrix_identity(&m);
-    math_matrix_get_orthographic(w, h, &m);
-
     // TODO: not relative paths
     font_id font =
         font_initialize("../assets/fonts/AdwaitaSans-Regular.ttf", 32);
     texture_id tex = texture_initialize("../assets/images/test.png");
 
+    render_obj text = TEXT((vec2){10, 0}, 2.0f, "Yoo", font, RED);
+    render_obj quad = QUAD((vec2){0, 0}, 100.0f, WHITE);
+    render_obj texture = TEXTURE((vec2){-100, 0}, 150.0f, tex);
+
     while (update()) {
         clear_color(BLACK);
-        draw_mesh(vertices, 3, m.m, tex, WHITE);
-        draw_text("Test hello i like edging", 20, 0, font, 1.0f, RED);
+
+        // todo add depth (so they actually can overlap)
+        draw_render_obj(&quad);
+        draw_render_obj(&texture);
+        draw_render_obj(&text);
 
         swap_buffers();
     }

@@ -1,4 +1,5 @@
 
+#include "cmath.h"
 #include "platform.h"
 #include "renderer.h"
 
@@ -139,6 +140,12 @@ static const char *mesh_fragment_shader =
     "void main() {\n"
     "    frag_color = texture(mesh_texture, tex_coord) * color;\n"
     "}\n";
+
+// pos(3) uv(2)
+static const f32 quad_vertices[] = {
+    -1, -1, 0, 0, 0, 1, -1, 0, 1, 0, 1,  1, 0, 1, 1,
+    -1, -1, 0, 0, 0, 1, 1,  0, 1, 1, -1, 1, 0, 0, 1,
+};
 
 //
 
@@ -418,7 +425,6 @@ u0 draw_text(const char *string, u32 x, const u32 y, const font_id id,
     glBindVertexArray(text.vao);
     glBindBuffer(GL_ARRAY_BUFFER, text.vbo);
 
-    glDisable(GL_DEPTH_TEST);
     for (const char *c = string; *c; c++) {
         const u8 ch = (u8)*c;
         if (ch >= 128) {
@@ -451,7 +457,6 @@ u0 draw_text(const char *string, u32 x, const u32 y, const font_id id,
 
         x += (u32)((f32)glyph->advance * sdf_scale);
     }
-    glEnable(GL_DEPTH_TEST);
 }
 
 u0 draw_mesh(const f32 *vertices, const u32 vertex_count, const f32 *mvp,
@@ -491,6 +496,54 @@ u0 draw_mesh(const f32 *vertices, const u32 vertex_count, const f32 *mvp,
 
     const int first = 0;
     glDrawArrays(GL_TRIANGLES, first, (GLsizei)vertex_count);
+}
+
+u0 draw_render_obj(render_obj *obj) {
+    u32 w, h;
+    get_window_size(&w, &h);
+
+    switch (obj->type) {
+    case RENDER_OBJ_TYPE_QUAD: {
+        matrix scale;
+        math_matrix_scale(&scale, obj->scale, obj->scale, 1.0);
+
+        matrix trans;
+        math_matrix_translate(&trans, obj->pos.x, obj->pos.y, 0.0f);
+
+        matrix model;
+        math_matrix_mul(&model, &trans, &scale);
+
+        matrix view;
+        math_matrix_get_orthographic(w, h, &view);
+
+        matrix m;
+        math_matrix_mul(&m, &view, &model);
+
+        draw_mesh(quad_vertices, 6, m.m, NO_TEXTURE, obj->quad.color);
+    } break;
+    case RENDER_OBJ_TYPE_TEXTURE: {
+        matrix scale;
+        math_matrix_scale(&scale, obj->scale, obj->scale, 1.0);
+
+        matrix trans;
+        math_matrix_translate(&trans, obj->pos.x, obj->pos.y, 0.0f);
+
+        matrix model;
+        math_matrix_mul(&model, &trans, &scale);
+
+        matrix view;
+        math_matrix_get_orthographic(w, h, &view);
+
+        matrix m;
+        math_matrix_mul(&m, &view, &model);
+
+        draw_mesh(quad_vertices, 6, m.m, obj->texture.id, WHITE);
+    } break;
+    case RENDER_OBJ_TYPE_TEXT: {
+        draw_text(obj->text.chars, obj->pos.x, obj->pos.y, obj->text.font,
+                  obj->scale, obj->text.color);
+    } break;
+    }
 }
 
 u0 measure_text(const char *string, const font_id id, const f32 scale,
