@@ -112,9 +112,9 @@ int main(int argc, char **argv) {
         font_initialize("../assets/fonts/AdwaitaSans-Regular.ttf", 32);
     texture_id tex = texture_initialize("../assets/images/test.png");
 
-    render_obj text = TEXT((vec2){10, 0}, 2.0f, "Yoo", font, RED);
-    render_obj quad = QUAD((vec2){0, 0}, 100.0f, WHITE);
-    render_obj texture = TEXTURE((vec2){-100, 0}, 150.0f, tex);
+    render_obj text = TEXT(VEC2(10, 0), 2.0f, "Yoo", font, RED);
+    render_obj quad = QUAD(VEC2(0, 0), 100.0f, WHITE);
+    render_obj texture = TEXTURE(VEC2(-100, 0), 150.0f, tex);
 
     while (update()) {
         clear_color(BLACK);

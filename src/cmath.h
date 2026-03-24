@@ -25,6 +25,15 @@ typedef struct {
     float w;
 } vec4;
 
+#define VEC2(x, y)                                                             \
+    (vec2) { (x), (y) }
+
+#define VEC2I(x, y)                                                            \
+    (vec2i) { (x), (y) }
+
+#define VEC4(x, y, z, w)                                                       \
+    (vec4) { (x), (y), (z), (w) }
+
 typedef struct {
     float m[16];
 } matrix;
