@@ -9,6 +9,8 @@
 typedef u32 color;
 #define BLACK 0x000000FF
 #define RED 0xFF0000FF
+#define GREEN 0x00FF00FF
+#define BLUE 0x0000FFFF
 #define WHITE 0xFFFFFFFF
 
 typedef u32 font_id;
