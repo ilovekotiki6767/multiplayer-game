@@ -110,7 +110,7 @@ i32 main(i32 argc, char **argv) {
                 draw_cmd *cmd = &snapshot.commands[i];
 
                 switch (cmd->type) {
-                case RENDER_OBJ_TYPE_QUAD: {
+                case DRAW_CMD_TYPE_QUAD: {
                     matrix scale;
                     math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
 
@@ -129,7 +129,7 @@ i32 main(i32 argc, char **argv) {
                     draw_mesh(quad_vertices, 6, m.m, NO_TEXTURE,
                               cmd->quad.color);
                 } break;
-                case RENDER_OBJ_TYPE_TEXTURE: {
+                case DRAW_CMD_TYPE_TEXTURE: {
                     matrix scale;
                     math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
 
@@ -147,7 +147,7 @@ i32 main(i32 argc, char **argv) {
 
                     draw_mesh(quad_vertices, 6, m.m, cmd->texture.id, WHITE);
                 } break;
-                case RENDER_OBJ_TYPE_TEXT: {
+                case DRAW_CMD_TYPE_TEXT: {
                     draw_text(cmd->text.chars, cmd->pos.x, cmd->pos.y,
                               cmd->text.font, cmd->scale, cmd->text.color);
                 } break;

@@ -160,7 +160,7 @@ i32 main(void) {
 
         // ground
         draw_cmd ground = (draw_cmd){
-            .type = RENDER_OBJ_TYPE_QUAD,
+            .type = DRAW_CMD_TYPE_QUAD,
             .pos = {0, -500 - 15.0f},
             .scale = 500.0f,
             .quad.color = GREEN,
@@ -172,7 +172,7 @@ i32 main(void) {
         for (i32 i = 0; i < client_idx; i++) {
             // player body
             draw_cmd cmd = (draw_cmd){
-                .type = RENDER_OBJ_TYPE_QUAD,
+                .type = DRAW_CMD_TYPE_QUAD,
                 .pos = clients[i].pos,
                 .scale = 15.0f,
                 .quad.color = RED,

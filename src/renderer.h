@@ -4,8 +4,6 @@
 #include "cmath.h"
 #include "types.h"
 
-#include <string.h>
-
 typedef u32 color;
 #define BLACK 0x000000FF
 #define RED 0xFF0000FF
@@ -21,9 +19,9 @@ typedef u32 texture_id;
 #define MAX_COMMANDS 32
 
 enum {
-    RENDER_OBJ_TYPE_QUAD,
-    RENDER_OBJ_TYPE_TEXTURE,
-    RENDER_OBJ_TYPE_TEXT,
+    DRAW_CMD_TYPE_QUAD,
+    DRAW_CMD_TYPE_TEXTURE,
+    DRAW_CMD_TYPE_TEXT,
 };
 
 typedef struct {
