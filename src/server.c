@@ -3,7 +3,6 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
-#include <math.h>
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <string.h>
@@ -37,8 +36,8 @@ static f32 get_time(u0) {
     return now - start;
 }
 
-int main(void) {
-    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+i32 main(void) {
+    i32 sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == -1) {
         fprintf(stderr, "socket: %s\n", strerror(errno));
 
@@ -46,7 +45,7 @@ int main(void) {
     }
 
     {
-        int opt = 1;
+        i32 opt = 1;
         if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
             -1) {
             fprintf(stderr, "setsockopt: %s\n", strerror(errno));
@@ -60,7 +59,7 @@ int main(void) {
     {
         // cap the receieve buffer so it does not eat all of the kernel memory
         // just in case
-        int rcvbuf = 256 * 1024;
+        i32 rcvbuf = 256 * 1024;
         if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf)) ==
             -1) {
             fprintf(stderr, "setsockopt: %s\n", strerror(errno));
@@ -126,7 +125,7 @@ int main(void) {
 
         if (client_idx < MAX_CLIENTS) {
             bool found = false;
-            for (int i = 0; i < client_idx; i++) {
+            for (i32 i = 0; i < client_idx; i++) {
                 if (clients[i].id ==
                     (i32)(client_addr.sin_port + client_addr.sin_addr.s_addr)) {
                     found = true;
@@ -164,7 +163,7 @@ int main(void) {
         render_snapshot snaphshot = {0};
         snaphshot.commands[snaphshot.count++] = cmd;
 
-        for (int i = 0; i < client_idx; i++) {
+        for (i32 i = 0; i < client_idx; i++) {
             struct sockaddr_in addr = clients[i].address;
 
             ssize_t sent = sendto(sock, &snaphshot, sizeof(snaphshot), 0,

@@ -24,7 +24,7 @@ static const f32 quad_vertices[] = {
     -1, -1, 0, 0, 0, 1, 1,  0, 1, 1, -1, 1, 0, 0, 1,
 };
 
-int main(int argc, char **argv) {
+i32 main(i32 argc, char **argv) {
     initialize();
     initialize_gl();
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
         ip = argv[1];
     }
 
-    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    i32 sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == -1) {
         fprintf(stderr, "socket: %s\n", strerror(errno));
 
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
         ssize_t n = recvfrom(sock, &snapshot, sizeof(snapshot) - 1, 0,
                              (struct sockaddr *)&recv_addr, &recv_addr_len);
         if (n != -1) {
-            for (int i = 0; i < snapshot.count; i++) {
+            for (i32 i = 0; i < snapshot.count; i++) {
                 u32 w, h;
                 get_window_size(&w, &h);
 

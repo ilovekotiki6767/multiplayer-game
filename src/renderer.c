@@ -21,7 +21,7 @@ typedef struct {
     GLuint vbo;
 } pipeline;
 
-typedef struct { // number of floats
+typedef struct { // number of f32 s
     u32 size;
 } attribute;
 
@@ -47,7 +47,7 @@ static pipeline create_pipeline(const char *vertex_source,
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    const int n = 1;
+    const i32 n = 1;
     glGenVertexArrays(n, &pipeline.vao);
     glGenBuffers(n, &pipeline.vbo);
 
@@ -60,15 +60,15 @@ static pipeline create_pipeline(const char *vertex_source,
     }
 
     const GLsizeiptr buffer_size =
-        (GLsizeiptr)(sizeof(float) * stride * vertices);
+        (GLsizeiptr)(sizeof(f32 ) * stride * vertices);
     glBufferData(GL_ARRAY_BUFFER, buffer_size, NULL, usage);
 
     u32 offset = 0;
     for (u32 i = 0; attributes[i].size != 0; i++) {
-        const int normalized = GL_FALSE;
+        const i32 normalized = GL_FALSE;
         glVertexAttribPointer(i, (GLint)attributes[i].size, GL_FLOAT,
-                              normalized, (GLsizei)(stride * sizeof(float)),
-                              (void *)(offset * sizeof(float)));
+                              normalized, (GLsizei)(stride * sizeof(f32 )),
+                              (void *)(offset * sizeof(f32 )));
 
         glEnableVertexAttribArray(i);
         offset += attributes[i].size;
@@ -78,7 +78,7 @@ static pipeline create_pipeline(const char *vertex_source,
 }
 
 static u0 destroy_pipeline(const pipeline *pipeline) {
-    const int n = 1;
+    const i32 n = 1;
     glDeleteBuffers(n, &pipeline->vbo);
     glDeleteVertexArrays(n, &pipeline->vao);
     glDeleteProgram(pipeline->program);
@@ -109,11 +109,11 @@ static const char *text_fragment_shader_source =
     "in vec2 tex_coord;\n"
     "uniform sampler2D glyph_texture;\n"
     "uniform vec4 color;\n"
-    "uniform float smoothing;\n"
+    "uniform f32  smoothing;\n"
     "out vec4 frag_color;\n"
     "void main() {\n"
-    "    float distance = texture(glyph_texture, tex_coord).r;\n"
-    "    float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, "
+    "    f32  distance = texture(glyph_texture, tex_coord).r;\n"
+    "    f32  alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, "
     "distance);\n"
     "    if (alpha < 0.01) discard;\n"
     "    frag_color = vec4(color.rgb, color.a * alpha);\n"
@@ -194,12 +194,12 @@ u0 initialize_gl(u0) {
     glEnable(GL_MULTISAMPLE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    const int n = 1;
+    const i32 n = 1;
     glGenTextures(n, &magic_pixel);
     glBindTexture(GL_TEXTURE_2D, magic_pixel);
     const u8 white_pixel[] = {255, 255, 255, 255};
-    const int level = 0;
-    const int border = 0;
+    const i32 level = 0;
+    const i32 border = 0;
     glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, 1, 1, border, GL_RGBA,
                  GL_UNSIGNED_BYTE, white_pixel);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -210,7 +210,7 @@ u0 quit_gl(u0) {
     for (u32 i = 0; i < font_count; i++) {
         for (u32 c = 0; c < 128; c++) {
             if (fonts[i].glyphs[c].texture) {
-                const int n = 1;
+                const i32 n = 1;
                 glDeleteTextures(n, &fonts[i].glyphs[c].texture);
             }
         }
@@ -218,13 +218,13 @@ u0 quit_gl(u0) {
 
     for (u32 i = 0; i < texture_count; i++) {
         if (textures[i]) {
-            const int n = 1;
+            const i32 n = 1;
             glDeleteTextures(n, &textures[i]);
         }
     }
 
     if (magic_pixel) {
-        const int n = 1;
+        const i32 n = 1;
         glDeleteTextures(n, &magic_pixel);
     }
 
@@ -242,12 +242,12 @@ font_id font_initialize(const char *path, const u32 size) {
     }
 
     FT_Face face;
-    const int face_index = 0;
+    const i32 face_index = 0;
     if (FT_New_Face(ft, path, face_index, &face)) {
         return 0;
     }
 
-    const int pixel_width = 0;
+    const i32 pixel_width = 0;
     FT_Set_Pixel_Sizes(face, pixel_width, SDF_RENDER_SIZE);
 
     const font_id id = font_count;
@@ -272,12 +272,12 @@ font_id font_initialize(const char *path, const u32 size) {
 
         GLuint texture;
 
-        const int n = 1;
+        const i32 n = 1;
         glGenTextures(n, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        const int level = 0;
-        const int border = 0;
+        const i32 level = 0;
+        const i32 border = 0;
         glTexImage2D(GL_TEXTURE_2D, level, GL_RED,
                      (GLsizei)face->glyph->bitmap.width,
                      (GLsizei)face->glyph->bitmap.rows, border, GL_RED,
@@ -307,7 +307,7 @@ u0 font_deinitialize(const font_id font) {
 
     for (u32 c = 0; c < 128; c++) {
         if (fonts[font].glyphs[c].texture) {
-            const int n = 1;
+            const i32 n = 1;
 
             glDeleteTextures(n, &fonts[font].glyphs[c].texture);
             fonts[font].glyphs[c].texture = 0;
@@ -322,10 +322,10 @@ texture_id texture_initialize(const char *path) {
         return 0;
     }
 
-    int width, height, channels;
+    i32 width, height, channels;
     stbi_set_flip_vertically_on_load(1);
 
-    const int desired_channels = 0;
+    const i32 desired_channels = 0;
     unsigned char *data =
         stbi_load(path, &width, &height, &channels, desired_channels);
 
@@ -343,12 +343,12 @@ texture_id texture_initialize(const char *path) {
     }
 
     GLuint gl_texture;
-    const int n = 1;
+    const i32 n = 1;
     glGenTextures(n, &gl_texture);
     glBindTexture(GL_TEXTURE_2D, gl_texture);
 
-    const int level = 0;
-    const int border = 0;
+    const i32 level = 0;
+    const i32 border = 0;
     glTexImage2D(GL_TEXTURE_2D, level, (GLint)format, width, height, border,
                  format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -372,14 +372,14 @@ u0 texture_deinitialize(const texture_id texture) {
     }
 
     if (textures[texture]) {
-        const int n = 1;
+        const i32 n = 1;
         glDeleteTextures(n, &textures[texture]);
         textures[texture] = 0;
     }
 }
 
 u0 clear_color(const color color) {
-    const float red = (f32)(color >> 24 & 0xFF) / 255.0f;
+    const f32  red = (f32)(color >> 24 & 0xFF) / 255.0f;
     const f32 green = (f32)(color >> 16 & 0xFF) / 255.0f;
     const f32 blue = (f32)(color >> 8 & 0xFF) / 255.0f;
     const f32 alpha = (f32)(color & 0xFF) / 255.0f;
@@ -470,8 +470,8 @@ u0 draw_mesh(const f32 *vertices, const u32 vertex_count, const f32 *mvp,
     const f32 a = (f32)(color & 0xFF) / 255.0f;
 
     glUseProgram(mesh.program);
-    const int transpose = GL_FALSE;
-    const int count = 1;
+    const i32 transpose = GL_FALSE;
+    const i32 count = 1;
     glUniformMatrix4fv(glGetUniformLocation(mesh.program, "mvp"), count,
                        transpose, mvp);
     glUniform4f(glGetUniformLocation(mesh.program, "color"), r, g, b, a);
@@ -483,11 +483,11 @@ u0 draw_mesh(const f32 *vertices, const u32 vertex_count, const f32 *mvp,
     glBindVertexArray(mesh.vao);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
 
-    const int offset = 0;
+    const i32 offset = 0;
     glBufferSubData(GL_ARRAY_BUFFER, offset,
                     (GLsizeiptr)(sizeof(f32) * vertex_count * 5), vertices);
 
-    const int first = 0;
+    const i32 first = 0;
     glDrawArrays(GL_TRIANGLES, first, (GLsizei)vertex_count);
 }
 

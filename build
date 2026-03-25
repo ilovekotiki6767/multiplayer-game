@@ -15,7 +15,7 @@ rm stbi.o
 CFLAGS_SERVER="-Wall -Wextra -pedantic"
 
 cc -o multiplayer_game/server src/server.c \
-   $CFLAGS_SERVER -lm
+   $CFLAGS_SERVER
 
 DEFINIES_CLIENT="-DCWD=\"$(pwd)\""
 CFLAGS_CLIENT="-Wall -Wextra -pedantic -g -Ilib -I/usr/include/freetype2"
