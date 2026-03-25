@@ -2,10 +2,12 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <math.h>
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "renderer.h"
@@ -119,7 +121,7 @@ int main(void) {
         // test draw_cmd
         draw_cmd cmd = (draw_cmd){
             .type = RENDER_OBJ_TYPE_QUAD,
-            .pos = {0, 0},
+            .pos = {sin(time(NULL)) * 100.0f, 0},
             .scale = 100.0f,
             .quad.color = RED,
         };
