@@ -22,6 +22,21 @@ typedef struct {
     i32 id;
 } client;
 
+// in seconds
+static f32 get_time(u0) {
+    static f64 start = 0.0;
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    f64 now = ts.tv_sec + ts.tv_nsec * 1e-9;
+    if (start == 0.0) {
+        start = now;
+    }
+
+    return now - start;
+}
+
 int main(void) {
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == -1) {
@@ -67,12 +82,17 @@ int main(void) {
     }
 
     client clients[MAX_CLIENTS];
-    int client_idx = 0;
+    i32 client_idx = 0;
 
     // game state
     vec2 player_pos = {0, 0};
 
+    f32 last_time = get_time();
     while (true) {
+        f32 current_time = get_time();
+        f32 dt = current_time - last_time;
+        last_time = current_time;
+
         unsigned char buf[BUF_SIZE];
         struct sockaddr_in client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
@@ -117,10 +137,10 @@ int main(void) {
                 // we already know the client it will send player actions
                 i32 player_action = *(i32 *)buf;
                 if (player_action == PA_MOVE_LEFT) {
-                    player_pos.x -= 5;
+                    player_pos.x -= 100 * dt;
                 }
                 if (player_action == PA_MOVE_RIGHT) {
-                    player_pos.x += 5;
+                    player_pos.x += 100 * dt;
                 }
             } else {
                 // we recevive a hello message
@@ -133,13 +153,10 @@ int main(void) {
             }
         }
 
-        struct timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-
         // test draw_cmd
         draw_cmd cmd = (draw_cmd){
             .type = RENDER_OBJ_TYPE_QUAD,
-            .pos = {player_pos.x, 0},
+            .pos = {player_pos.x, player_pos.y},
             .scale = 100.0f,
             .quad.color = RED,
         };
