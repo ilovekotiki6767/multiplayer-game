@@ -158,9 +158,8 @@ i32 main(void) {
             }
         }
 
+        // add draw commands
         for (i32 i = 0; i < client_idx; i++) {
-            struct sockaddr_in addr = clients[i].address;
-
             draw_cmd cmd = (draw_cmd){
                 .type = RENDER_OBJ_TYPE_QUAD,
                 .pos = clients[i].pos,
@@ -168,6 +167,11 @@ i32 main(void) {
                 .quad.color = RED,
             };
             snaphshot.commands[snaphshot.count++] = cmd;
+        }
+
+        // send to clients
+        for (i32 i = 0; i < client_idx; i++) {
+            struct sockaddr_in addr = clients[i].address;
 
             ssize_t sent = sendto(sock, &snaphshot, sizeof(snaphshot), 0,
                                   (struct sockaddr *)&addr, sizeof(addr));
