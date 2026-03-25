@@ -19,6 +19,9 @@
 typedef struct {
     struct sockaddr_in address;
     i32 id;
+
+    // pos in world
+    vec2 pos;
 } client;
 
 // in seconds
@@ -83,14 +86,14 @@ i32 main(void) {
     client clients[MAX_CLIENTS];
     i32 client_idx = 0;
 
-    // game state
-    vec2 player_pos = {0, 0};
-
     f32 last_time = get_time();
+    render_snapshot snaphshot = {0};
     while (true) {
         f32 current_time = get_time();
         f32 dt = current_time - last_time;
         last_time = current_time;
+
+        snaphshot.count = 0;
 
         unsigned char buf[BUF_SIZE];
         struct sockaddr_in client_addr;
@@ -125,10 +128,13 @@ i32 main(void) {
 
         if (client_idx < MAX_CLIENTS) {
             bool found = false;
+            i32 found_idx = -1;
             for (i32 i = 0; i < client_idx; i++) {
                 if (clients[i].id ==
                     (i32)(client_addr.sin_port + client_addr.sin_addr.s_addr)) {
                     found = true;
+                    found_idx = i;
+                    break;
                 }
             }
 
@@ -136,10 +142,10 @@ i32 main(void) {
                 // we already know the client it will send player actions
                 i32 player_action = *(i32 *)buf;
                 if (player_action == PA_MOVE_LEFT) {
-                    player_pos.x -= 100 * dt;
+                    clients[found_idx].pos.x -= 100 * dt;
                 }
                 if (player_action == PA_MOVE_RIGHT) {
-                    player_pos.x += 100 * dt;
+                    clients[found_idx].pos.x += 100 * dt;
                 }
             } else {
                 // we recevive a hello message
@@ -152,19 +158,16 @@ i32 main(void) {
             }
         }
 
-        // test draw_cmd
-        draw_cmd cmd = (draw_cmd){
-            .type = RENDER_OBJ_TYPE_QUAD,
-            .pos = {player_pos.x, player_pos.y},
-            .scale = 100.0f,
-            .quad.color = RED,
-        };
-
-        render_snapshot snaphshot = {0};
-        snaphshot.commands[snaphshot.count++] = cmd;
-
         for (i32 i = 0; i < client_idx; i++) {
             struct sockaddr_in addr = clients[i].address;
+
+            draw_cmd cmd = (draw_cmd){
+                .type = RENDER_OBJ_TYPE_QUAD,
+                .pos = clients[i].pos,
+                .scale = 15.0f,
+                .quad.color = RED,
+            };
+            snaphshot.commands[snaphshot.count++] = cmd;
 
             ssize_t sent = sendto(sock, &snaphshot, sizeof(snaphshot), 0,
                                   (struct sockaddr *)&addr, sizeof(addr));
