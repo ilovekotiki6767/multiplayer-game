@@ -15,6 +15,7 @@
 
 typedef struct {
     struct sockaddr_in address;
+    i32 id;
 } client;
 
 int main(void) {
@@ -99,9 +100,20 @@ int main(void) {
         printf("recv %s:%d: %s\n", ip, ntohs(client_addr.sin_port), buf);
 
         if (client_idx < MAX_CLIENTS) {
-            clients[client_idx++] = (client){
-                .address = client_addr,
-            };
+            bool found = false;
+            for (int i = 0; i < client_idx; i++) {
+                if (clients[i].id ==
+                    (i32)(client_addr.sin_port + client_addr.sin_addr.s_addr)) {
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                clients[client_idx++] = (client){
+                    .address = client_addr,
+                    .id = client_addr.sin_port + client_addr.sin_addr.s_addr,
+                };
+            }
         }
 
         // test draw_cmd
