@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "cmath.h"
+#include "common.h"
 #include "platform.h"
 #include "renderer.h"
 
@@ -86,6 +87,14 @@ int main(int argc, char **argv) {
     while (update()) {
         clear_color(BLACK);
 
+        i32 player_action = PA_NO_ACTION;
+        if (is_key_down(KEY_A)) {
+            player_action = PA_MOVE_LEFT;
+        }
+        if (is_key_down(KEY_D)) {
+            player_action = PA_MOVE_RIGHT;
+        }
+
         struct sockaddr_in recv_addr;
         socklen_t recv_addr_len = sizeof(recv_addr);
         memset(&recv_addr, 0, sizeof(recv_addr));
@@ -147,7 +156,7 @@ int main(int argc, char **argv) {
         }
 
         ssize_t sent =
-            sendto(sock, message, message_len, 0,
+            sendto(sock, &player_action, sizeof(player_action), 0,
                    (struct sockaddr *)&server_addr, sizeof(server_addr));
 
         swap_buffers();

@@ -1,3 +1,4 @@
+#include <bits/time.h>
 #include <stdio.h>
 
 #include <arpa/inet.h>
@@ -10,6 +11,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "common.h"
 #include "renderer.h"
 
 #define BUF_SIZE 1024
@@ -67,6 +69,9 @@ int main(void) {
     client clients[MAX_CLIENTS];
     int client_idx = 0;
 
+    // game state
+    vec2 player_pos = {0, 0};
+
     while (true) {
         unsigned char buf[BUF_SIZE];
         struct sockaddr_in client_addr;
@@ -99,8 +104,6 @@ int main(void) {
             snprintf(ip, sizeof(ip), "?.?.?.?");
         }
 
-        printf("recv %s:%d: %s\n", ip, ntohs(client_addr.sin_port), buf);
-
         if (client_idx < MAX_CLIENTS) {
             bool found = false;
             for (int i = 0; i < client_idx; i++) {
@@ -110,7 +113,19 @@ int main(void) {
                 }
             }
 
-            if (!found) {
+            if (found) {
+                // we already know the client it will send player actions
+                i32 player_action = *(i32 *)buf;
+                if (player_action == PA_MOVE_LEFT) {
+                    player_pos.x -= 5;
+                }
+                if (player_action == PA_MOVE_RIGHT) {
+                    player_pos.x += 5;
+                }
+            } else {
+                // we recevive a hello message
+                printf("recv %s:%d: %s\n", ip, ntohs(client_addr.sin_port),
+                       buf);
                 clients[client_idx++] = (client){
                     .address = client_addr,
                     .id = client_addr.sin_port + client_addr.sin_addr.s_addr,
@@ -118,10 +133,13 @@ int main(void) {
             }
         }
 
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+
         // test draw_cmd
         draw_cmd cmd = (draw_cmd){
             .type = RENDER_OBJ_TYPE_QUAD,
-            .pos = {sin(time(NULL)) * 100.0f, 0},
+            .pos = {player_pos.x, 0},
             .scale = 100.0f,
             .quad.color = RED,
         };

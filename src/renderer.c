@@ -1,5 +1,4 @@
 
-#include "cmath.h"
 #include "platform.h"
 #include "renderer.h"
 

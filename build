@@ -14,7 +14,7 @@ rm stbi.o
 
 CFLAGS_SERVER="-Wall -Wextra -pedantic"
 
-cc -o multiplayer_game/multiplayer_game_server src/server.c \
+cc -o multiplayer_game/server src/server.c \
    $CFLAGS_SERVER -lm
 
 DEFINIES_CLIENT="-DCWD=\"$(pwd)\""
@@ -26,6 +26,6 @@ SRC_CLIENT="\
    src/platform/x11.c \
    src/cmath.c"
 
-cc -o multiplayer_game/multiplayer_game_client $SRC_CLIENT \
+cc -o multiplayer_game/client $SRC_CLIENT \
    $CFLAGS_CLIENT $LDFLAGS_CLIENT
    
