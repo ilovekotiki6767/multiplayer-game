@@ -16,6 +16,7 @@ typedef u32 texture_id;
 #define NO_TEXTURE UINT32_MAX
 
 #define MAX_CHARS 128
+#define MAX_COMMANDS 32
 
 enum {
     RENDER_OBJ_TYPE_QUAD,
@@ -43,35 +44,12 @@ typedef struct {
             color color;
         } text;
     };
-} render_obj;
+} draw_cmd;
 
-static inline render_obj QUAD(vec2 pos, f32 scale, color color) {
-    return (render_obj){.type = RENDER_OBJ_TYPE_QUAD,
-                        .pos = pos,
-                        .scale = scale,
-                        .quad.color = color};
-}
-
-static inline render_obj TEXTURE(vec2 pos, f32 scale, texture_id id) {
-    return (render_obj){.type = RENDER_OBJ_TYPE_TEXTURE,
-                        .pos = pos,
-                        .scale = scale,
-                        .texture.id = id};
-}
-
-static inline render_obj TEXT(vec2 pos, f32 scale, const char *text,
-                              font_id font, color color) {
-    render_obj obj = (render_obj){.type = RENDER_OBJ_TYPE_TEXT,
-                                  .pos = pos,
-                                  .scale = scale,
-                                  .text.font = font,
-                                  .text.color = color};
-    u32 min_size =
-        strlen(text) < (MAX_CHARS - 1) ? strlen(text) : MAX_CHARS - 1;
-    strncpy(obj.text.chars, text, min_size);
-    obj.text.chars[min_size] = '\0';
-    return obj;
-}
+typedef struct {
+    draw_cmd commands[MAX_COMMANDS];
+    i32 count;
+} render_snapshot;
 
 font_id font_initialize(const char *path, u32 size);
 
@@ -91,8 +69,6 @@ u0 measure_text(const char *string, font_id id, f32 scale, u32 *width,
 // otherwise, samples from `texture` and multiplies by `color`
 u0 draw_mesh(const f32 *vertices, u32 vertex_count, const f32 *mvp,
              texture_id texture, color color);
-
-u0 draw_render_obj(render_obj *obj);
 
 u0 initialize_gl(u0);
 

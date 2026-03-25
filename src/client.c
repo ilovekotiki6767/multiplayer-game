@@ -17,6 +17,12 @@
 
 #define BUF_SIZE 1024
 
+// pos(3) uv(2)
+static const f32 quad_vertices[] = {
+    -1, -1, 0, 0, 0, 1, -1, 0, 1, 0, 1,  1, 0, 1, 1,
+    -1, -1, 0, 0, 0, 1, 1,  0, 1, 1, -1, 1, 0, 0, 1,
+};
+
 int main(int argc, char **argv) {
     initialize();
     initialize_gl();
@@ -77,28 +83,72 @@ int main(int argc, char **argv) {
         font_initialize("../assets/fonts/AdwaitaSans-Regular.ttf", 32);
     texture_id tex = texture_initialize("../assets/images/test.png");
 
-    render_obj text = TEXT(VEC2(10, 0), 2.0f, "Yoo", font, RED);
-    render_obj quad = QUAD(VEC2(0, 0), 100.0f, WHITE);
-    render_obj texture = TEXTURE(VEC2(-100, 0), 150.0f, tex);
-
     while (update()) {
-        unsigned char buf[BUF_SIZE];
+        clear_color(BLACK);
+
         struct sockaddr_in recv_addr;
         socklen_t recv_addr_len = sizeof(recv_addr);
         memset(&recv_addr, 0, sizeof(recv_addr));
 
-        ssize_t n = recvfrom(sock, buf, sizeof(buf) - 1, 0,
+        render_snapshot snapshot;
+        ssize_t n = recvfrom(sock, &snapshot, sizeof(snapshot) - 1, 0,
                              (struct sockaddr *)&recv_addr, &recv_addr_len);
         if (n != -1) {
-            buf[n] = '\0';
-            printf("recv %zd bytes: %s\n", n, buf);
-        }
-        clear_color(BLACK);
+            for (int i = 0; i < snapshot.count; i++) {
+                u32 w, h;
+                get_window_size(&w, &h);
 
-        // todo add depth (so they actually can overlap)
-        draw_render_obj(&quad);
-        draw_render_obj(&texture);
-        draw_render_obj(&text);
+                draw_cmd *cmd = &snapshot.commands[i];
+
+                switch (cmd->type) {
+                case RENDER_OBJ_TYPE_QUAD: {
+                    matrix scale;
+                    math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
+
+                    matrix trans;
+                    math_matrix_translate(&trans, cmd->pos.x, cmd->pos.y, 0.0f);
+
+                    matrix model;
+                    math_matrix_mul(&model, &trans, &scale);
+
+                    matrix view;
+                    math_matrix_get_orthographic(w, h, &view);
+
+                    matrix m;
+                    math_matrix_mul(&m, &view, &model);
+
+                    draw_mesh(quad_vertices, 6, m.m, NO_TEXTURE,
+                              cmd->quad.color);
+                } break;
+                case RENDER_OBJ_TYPE_TEXTURE: {
+                    matrix scale;
+                    math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
+
+                    matrix trans;
+                    math_matrix_translate(&trans, cmd->pos.x, cmd->pos.y, 0.0f);
+
+                    matrix model;
+                    math_matrix_mul(&model, &trans, &scale);
+
+                    matrix view;
+                    math_matrix_get_orthographic(w, h, &view);
+
+                    matrix m;
+                    math_matrix_mul(&m, &view, &model);
+
+                    draw_mesh(quad_vertices, 6, m.m, cmd->texture.id, WHITE);
+                } break;
+                case RENDER_OBJ_TYPE_TEXT: {
+                    draw_text(cmd->text.chars, cmd->pos.x, cmd->pos.y,
+                              cmd->text.font, cmd->scale, cmd->text.color);
+                } break;
+                }
+            }
+        }
+
+        ssize_t sent =
+            sendto(sock, message, message_len, 0,
+                   (struct sockaddr *)&server_addr, sizeof(server_addr));
 
         swap_buffers();
     }

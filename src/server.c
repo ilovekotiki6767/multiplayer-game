@@ -8,12 +8,13 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "renderer.h"
+
 #define BUF_SIZE 1024
 #define MAX_CLIENTS 32
 
 typedef struct {
     struct sockaddr_in address;
-    bool alive;
 } client;
 
 int main(void) {
@@ -95,17 +96,29 @@ int main(void) {
             snprintf(ip, sizeof(ip), "?.?.?.?");
         }
 
+        printf("recv %s:%d: %s\n", ip, ntohs(client_addr.sin_port), buf);
+
         if (client_idx < MAX_CLIENTS) {
             clients[client_idx++] = (client){
                 .address = client_addr,
-                .alive = true,
             };
         }
+
+        // test draw_cmd
+        draw_cmd cmd = (draw_cmd){
+            .type = RENDER_OBJ_TYPE_QUAD,
+            .pos = {0, 0},
+            .scale = 100.0f,
+            .quad.color = RED,
+        };
+
+        render_snapshot snaphshot = {0};
+        snaphshot.commands[snaphshot.count++] = cmd;
 
         for (int i = 0; i < client_idx; i++) {
             struct sockaddr_in addr = clients[i].address;
 
-            ssize_t sent = sendto(sock, buf, (size_t)n, 0,
+            ssize_t sent = sendto(sock, &snaphshot, sizeof(snaphshot), 0,
                                   (struct sockaddr *)&addr, sizeof(addr));
             if (sent == -1) {
                 if (errno == EINTR) {
@@ -117,7 +130,7 @@ int main(void) {
                 continue;
             }
 
-            if (sent != n) {
+            if (sent != sizeof(snaphshot)) {
                 fprintf(stderr, "sendto: short write\n");
                 printf("sent %zd bytes to %s:%d\n", sent, ip,
                        ntohs(client_addr.sin_port));
