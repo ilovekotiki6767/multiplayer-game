@@ -20,8 +20,9 @@ typedef struct {
     struct sockaddr_in address;
     i32 id;
 
-    // pos in world
     vec2 pos;
+    vec2 vel;
+    vec2 acc;
 } client;
 
 // in seconds
@@ -86,6 +87,8 @@ i32 main(void) {
     client clients[MAX_CLIENTS];
     i32 client_idx = 0;
 
+    const vec2 gravity = VEC2(0, -100);
+
     f32 last_time = get_time();
     render_snapshot snaphshot = {0};
     while (true) {
@@ -126,6 +129,7 @@ i32 main(void) {
             snprintf(ip, sizeof(ip), "?.?.?.?");
         }
 
+        // add clients and update them according to their actions
         if (client_idx < MAX_CLIENTS) {
             bool found = false;
             i32 found_idx = -1;
@@ -142,20 +146,33 @@ i32 main(void) {
                 // we already know the client it will send player actions
                 i32 player_action = *(i32 *)buf;
                 if (player_action == PA_MOVE_LEFT) {
-                    clients[found_idx].pos.x -= 100 * dt;
+                    clients[found_idx].vel.x -= 100 * dt;
                 }
                 if (player_action == PA_MOVE_RIGHT) {
-                    clients[found_idx].pos.x += 100 * dt;
+                    clients[found_idx].vel.x += 100 * dt;
                 }
             } else {
                 // we recevive a hello message
-                printf("recv %s:%d: %s\n", ip, ntohs(client_addr.sin_port),
-                       buf);
+                printf("Client [%d/%d] recv %s:%d: %s\n", client_idx + 1,
+                       MAX_CLIENTS, ip, ntohs(client_addr.sin_port), buf);
                 clients[client_idx++] = (client){
                     .address = client_addr,
                     .id = client_addr.sin_port + client_addr.sin_addr.s_addr,
                 };
             }
+        }
+
+        // update clients
+        for (i32 i = 0; i < client_idx; i++) {
+            client *c = &clients[i];
+
+            // right now only force acting is gravity
+            c->acc = gravity;
+
+            c->vel = math_vec2_add(c->vel, math_vec2_scale(c->acc, dt));
+            c->pos = math_vec2_add(c->pos, math_vec2_scale(c->vel, dt));
+
+            c->acc = VEC2(0, 0);
         }
 
         // ground
@@ -168,7 +185,7 @@ i32 main(void) {
 
         snaphshot.commands[snaphshot.count++] = ground;
 
-        // add players
+        // draw commands for every client
         for (i32 i = 0; i < client_idx; i++) {
             // player body
             draw_cmd cmd = (draw_cmd){
