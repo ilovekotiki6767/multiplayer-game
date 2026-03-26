@@ -87,12 +87,22 @@ i32 main(i32 argc, char **argv) {
     while (update()) {
         clear_color(BLACK);
 
-        i32 player_action = PA_NO_ACTION;
+        pa_action player_action = (pa_action){
+            .type = PA_NO_ACTION,
+        };
         if (is_key_down(KEY_A)) {
-            player_action = PA_MOVE_LEFT;
+            player_action.type = PA_MOVE_LEFT;
         }
         if (is_key_down(KEY_D)) {
-            player_action = PA_MOVE_RIGHT;
+            player_action.type = PA_MOVE_RIGHT;
+        }
+        if (is_mouse_button_pressed(MOUSE_LEFT)) {
+            player_action.type = PA_SHOOT;
+
+            i32 x, y;
+            get_mouse_position(&x, &y);
+
+            player_action.shoot.click_pos = (vec2){x, y};
         }
 
         struct sockaddr_in recv_addr;

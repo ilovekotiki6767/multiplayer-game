@@ -88,7 +88,7 @@ i32 main(void) {
     client clients[MAX_CLIENTS];
     i32 client_idx = 0;
 
-    const vec2 gravity = VEC2(0, 100);
+    const vec2 gravity = VEC2(0, 250);
 
     f32 last_time = get_time();
     render_snapshot snaphshot = {0};
@@ -145,12 +145,22 @@ i32 main(void) {
 
             if (found) {
                 // we already know the client it will send player actions
-                i32 player_action = *(i32 *)buf;
-                if (player_action == PA_MOVE_LEFT) {
-                    clients[found_idx].vel.x -= 100 * dt;
+                pa_action player_action = *(pa_action *)buf;
+                client *c = &clients[found_idx];
+
+                if (player_action.type == PA_MOVE_LEFT) {
+                    c->vel.x -= 100 * dt;
                 }
-                if (player_action == PA_MOVE_RIGHT) {
-                    clients[found_idx].vel.x += 100 * dt;
+                if (player_action.type == PA_MOVE_RIGHT) {
+                    c->vel.x += 100 * dt;
+                }
+                if (player_action.type == PA_SHOOT) {
+                    vec2 pos = player_action.shoot.click_pos;
+
+                    vec2 delta = math_vec2_scale(
+                        math_vec2_norm(math_vec2_subtract(c->pos, pos)),
+                        175.0f);
+                    c->vel = math_vec2_add(c->vel, delta);
                 }
             } else {
                 // we recevive a hello message
@@ -174,6 +184,7 @@ i32 main(void) {
             c->vel = math_vec2_add(c->vel, math_vec2_scale(c->acc, dt));
             c->pos = math_vec2_add(c->pos, math_vec2_scale(c->vel, dt));
 
+            c->vel = math_vec2_scale(c->vel, 0.999f);
             c->acc = VEC2(0, 0);
 
             // collisions
