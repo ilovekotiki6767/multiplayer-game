@@ -10,6 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "collision.h"
 #include "common.h"
 #include "renderer.h"
 
@@ -87,7 +88,7 @@ i32 main(void) {
     client clients[MAX_CLIENTS];
     i32 client_idx = 0;
 
-    const vec2 gravity = VEC2(0, -100);
+    const vec2 gravity = VEC2(0, 100);
 
     f32 last_time = get_time();
     render_snapshot snaphshot = {0};
@@ -158,6 +159,7 @@ i32 main(void) {
                 clients[client_idx++] = (client){
                     .address = client_addr,
                     .id = client_addr.sin_port + client_addr.sin_addr.s_addr,
+                    .pos = {450, 0},
                 };
             }
         }
@@ -173,13 +175,20 @@ i32 main(void) {
             c->pos = math_vec2_add(c->pos, math_vec2_scale(c->vel, dt));
 
             c->acc = VEC2(0, 0);
+
+            // collisions
+            vec2 buttom_pos = VEC2(c->pos.x, c->pos.y + 15.0f);
+            if (coll_check_point_rect(buttom_pos, VEC2(250, 400),
+                                      VEC2(500, 50))) {
+                c->pos.y = 400.0f - 15.0f;
+                c->vel.y = 0.0f;
+            }
         }
 
-        // ground
         draw_cmd ground = (draw_cmd){
             .type = DRAW_CMD_TYPE_QUAD,
-            .pos = {0, -500 - 15.0f},
-            .scale = 500.0f,
+            .pos = {250, 400},
+            .scale = {500.0f, 50.0f},
             .quad.color = GREEN,
         };
 
@@ -191,7 +200,7 @@ i32 main(void) {
             draw_cmd cmd = (draw_cmd){
                 .type = DRAW_CMD_TYPE_QUAD,
                 .pos = clients[i].pos,
-                .scale = 15.0f,
+                .scale = {15.0f, 15.0f},
                 .quad.color = RED,
             };
 

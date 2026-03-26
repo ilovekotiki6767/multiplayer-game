@@ -25,9 +25,9 @@ enum {
 };
 
 typedef struct {
-    int type;
+    i32 type;
     vec2 pos;
-    f32 scale;
+    vec2 scale; // for text only x is used
 
     union {
         struct {

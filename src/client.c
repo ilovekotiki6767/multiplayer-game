@@ -109,13 +109,24 @@ i32 main(i32 argc, char **argv) {
 
                 draw_cmd *cmd = &snapshot.commands[i];
 
+                // convert pos from top left origin to center to render
+                vec2 pos = (vec2){
+                    .x = cmd->pos.x + cmd->scale.x * 0.5f,
+                    .y = cmd->pos.y + cmd->scale.y * 0.5f,
+                };
+
+                vec2 scale_v = (vec2){
+                    .x = cmd->scale.x * 0.5f,
+                    .y = cmd->scale.y * 0.5f,
+                };
+
                 switch (cmd->type) {
                 case DRAW_CMD_TYPE_QUAD: {
                     matrix scale;
-                    math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
+                    math_matrix_scale(&scale, scale_v.x, scale_v.y, 1.0);
 
                     matrix trans;
-                    math_matrix_translate(&trans, cmd->pos.x, cmd->pos.y, 0.0f);
+                    math_matrix_translate(&trans, pos.x, pos.y, 0.0f);
 
                     matrix model;
                     math_matrix_mul(&model, &trans, &scale);
@@ -131,10 +142,10 @@ i32 main(i32 argc, char **argv) {
                 } break;
                 case DRAW_CMD_TYPE_TEXTURE: {
                     matrix scale;
-                    math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
+                    math_matrix_scale(&scale, scale_v.x, scale_v.y, 1.0);
 
                     matrix trans;
-                    math_matrix_translate(&trans, cmd->pos.x, cmd->pos.y, 0.0f);
+                    math_matrix_translate(&trans, pos.x, pos.y, 0.0f);
 
                     matrix model;
                     math_matrix_mul(&model, &trans, &scale);
@@ -149,7 +160,7 @@ i32 main(i32 argc, char **argv) {
                 } break;
                 case DRAW_CMD_TYPE_TEXT: {
                     draw_text(cmd->text.chars, cmd->pos.x, cmd->pos.y,
-                              cmd->text.font, cmd->scale, cmd->text.color);
+                              cmd->text.font, cmd->scale.x, cmd->text.color);
                 } break;
                 }
             }
