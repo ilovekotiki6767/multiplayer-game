@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "cmath.h"
+#include "common.h"
 #include "platform.h"
 #include "renderer.h"
 
@@ -23,7 +24,7 @@ static const f32 quad_vertices[] = {
     -1, -1, 0, 0, 0, 1, 1,  0, 1, 1, -1, 1, 0, 0, 1,
 };
 
-int main(int argc, char **argv) {
+i32 main(i32 argc, char **argv) {
     initialize();
     initialize_gl();
 
@@ -32,7 +33,7 @@ int main(int argc, char **argv) {
         ip = argv[1];
     }
 
-    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    i32 sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == -1) {
         fprintf(stderr, "socket: %s\n", strerror(errno));
 
@@ -86,6 +87,24 @@ int main(int argc, char **argv) {
     while (update()) {
         clear_color(BLACK);
 
+        pa_action player_action = (pa_action){
+            .type = PA_NO_ACTION,
+        };
+        if (is_key_down(KEY_A)) {
+            player_action.type = PA_MOVE_LEFT;
+        }
+        if (is_key_down(KEY_D)) {
+            player_action.type = PA_MOVE_RIGHT;
+        }
+        if (is_mouse_button_pressed(MOUSE_LEFT)) {
+            player_action.type = PA_SHOOT;
+
+            i32 x, y;
+            get_mouse_position(&x, &y);
+
+            player_action.shoot.click_pos = (vec2){x, y};
+        }
+
         struct sockaddr_in recv_addr;
         socklen_t recv_addr_len = sizeof(recv_addr);
         memset(&recv_addr, 0, sizeof(recv_addr));
@@ -94,19 +113,30 @@ int main(int argc, char **argv) {
         ssize_t n = recvfrom(sock, &snapshot, sizeof(snapshot) - 1, 0,
                              (struct sockaddr *)&recv_addr, &recv_addr_len);
         if (n != -1) {
-            for (int i = 0; i < snapshot.count; i++) {
+            for (i32 i = 0; i < snapshot.count; i++) {
                 u32 w, h;
                 get_window_size(&w, &h);
 
                 draw_cmd *cmd = &snapshot.commands[i];
 
+                // convert pos from top left origin to center to render
+                vec2 pos = (vec2){
+                    .x = cmd->pos.x + cmd->scale.x * 0.5f,
+                    .y = cmd->pos.y + cmd->scale.y * 0.5f,
+                };
+
+                vec2 scale_v = (vec2){
+                    .x = cmd->scale.x * 0.5f,
+                    .y = cmd->scale.y * 0.5f,
+                };
+
                 switch (cmd->type) {
-                case RENDER_OBJ_TYPE_QUAD: {
+                case DRAW_CMD_TYPE_QUAD: {
                     matrix scale;
-                    math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
+                    math_matrix_scale(&scale, scale_v.x, scale_v.y, 1.0);
 
                     matrix trans;
-                    math_matrix_translate(&trans, cmd->pos.x, cmd->pos.y, 0.0f);
+                    math_matrix_translate(&trans, pos.x, pos.y, 0.0f);
 
                     matrix model;
                     math_matrix_mul(&model, &trans, &scale);
@@ -120,12 +150,12 @@ int main(int argc, char **argv) {
                     draw_mesh(quad_vertices, 6, m.m, NO_TEXTURE,
                               cmd->quad.color);
                 } break;
-                case RENDER_OBJ_TYPE_TEXTURE: {
+                case DRAW_CMD_TYPE_TEXTURE: {
                     matrix scale;
-                    math_matrix_scale(&scale, cmd->scale, cmd->scale, 1.0);
+                    math_matrix_scale(&scale, scale_v.x, scale_v.y, 1.0);
 
                     matrix trans;
-                    math_matrix_translate(&trans, cmd->pos.x, cmd->pos.y, 0.0f);
+                    math_matrix_translate(&trans, pos.x, pos.y, 0.0f);
 
                     matrix model;
                     math_matrix_mul(&model, &trans, &scale);
@@ -138,16 +168,16 @@ int main(int argc, char **argv) {
 
                     draw_mesh(quad_vertices, 6, m.m, cmd->texture.id, WHITE);
                 } break;
-                case RENDER_OBJ_TYPE_TEXT: {
+                case DRAW_CMD_TYPE_TEXT: {
                     draw_text(cmd->text.chars, cmd->pos.x, cmd->pos.y,
-                              cmd->text.font, cmd->scale, cmd->text.color);
+                              cmd->text.font, cmd->scale.x, cmd->text.color);
                 } break;
                 }
             }
         }
 
         ssize_t sent =
-            sendto(sock, message, message_len, 0,
+            sendto(sock, &player_action, sizeof(player_action), 0,
                    (struct sockaddr *)&server_addr, sizeof(server_addr));
 
         swap_buffers();

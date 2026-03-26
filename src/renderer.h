@@ -4,11 +4,11 @@
 #include "cmath.h"
 #include "types.h"
 
-#include <string.h>
-
 typedef u32 color;
 #define BLACK 0x000000FF
 #define RED 0xFF0000FF
+#define GREEN 0x00FF00FF
+#define BLUE 0x0000FFFF
 #define WHITE 0xFFFFFFFF
 
 typedef u32 font_id;
@@ -19,15 +19,15 @@ typedef u32 texture_id;
 #define MAX_COMMANDS 32
 
 enum {
-    RENDER_OBJ_TYPE_QUAD,
-    RENDER_OBJ_TYPE_TEXTURE,
-    RENDER_OBJ_TYPE_TEXT,
+    DRAW_CMD_TYPE_QUAD,
+    DRAW_CMD_TYPE_TEXTURE,
+    DRAW_CMD_TYPE_TEXT,
 };
 
 typedef struct {
-    int type;
+    i32 type;
     vec2 pos;
-    f32 scale;
+    vec2 scale; // for text only x is used
 
     union {
         struct {

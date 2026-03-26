@@ -557,4 +557,4 @@ u0 clear_text_input(u0) {
 
 bool has_text_input(u0) { return text_input_available; }
 
-GLADloadproc get_proc_address(u0) { return (GLADloadproc)glXGetProcAddress; }
+proc_fn get_proc_address(u0) { return (proc_fn)glXGetProcAddress; }
