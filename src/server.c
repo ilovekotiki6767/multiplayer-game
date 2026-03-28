@@ -64,7 +64,9 @@ i32 main(void) {
         switch (package->type) {
         case NP_TYPE_HELLO: {
             i32 handle = server_add_peer(&s, &peer, player_idx);
-            players[player_idx++] = (player){0};
+            players[player_idx++] = (player){
+                .pos = {350, -100},
+            };
 
             printf("Client [%d/%d] recv %s:%d: %.*s\n", handle + 1, MAX_CLIENTS,
                    peer.ip, ntohs(peer.addr.sin_port), package->size,

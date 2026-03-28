@@ -10,9 +10,6 @@
 #define UDP_MAX_SIZE 5000u
 #define MAX_CLIENTS 32
 
-// pretty cooked desing rn
-#define HEADER_SIZE (sizeof(i32) * 2)
-
 #define SERVER_PORT 27015
 
 // network packages types

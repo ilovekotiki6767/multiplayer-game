@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#define HEADER_SIZE (sizeof(i32) * 2)
+
 bool initialize_server(net_server *s, i32 port) {
     // create server socket
     s->fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
