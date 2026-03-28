@@ -47,8 +47,8 @@ typedef struct {
 } draw_cmd;
 
 typedef struct {
-    draw_cmd commands[MAX_COMMANDS];
     i32 count;
+    draw_cmd commands[MAX_COMMANDS];
 } render_snapshot;
 
 font_id font_initialize(const char *path, u32 size);

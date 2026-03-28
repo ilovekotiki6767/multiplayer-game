@@ -13,6 +13,7 @@
 
 #include "cmath.h"
 #include "common.h"
+#include "net.h"
 #include "platform.h"
 #include "renderer.h"
 
@@ -33,51 +34,13 @@ i32 main(i32 argc, char **argv) {
         ip = argv[1];
     }
 
-    i32 sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sock == -1) {
-        fprintf(stderr, "socket: %s\n", strerror(errno));
-
-        return 1;
-    }
-
-    const i32 opt = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
-
-    i32 flags = fcntl(sock, F_GETFL, 0);
-    if (flags >= 0) {
-        fcntl(sock, F_SETFL, flags | O_NONBLOCK);
-    }
-
-    struct sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(27015);
-
-    if (inet_pton(AF_INET, ip, &server_addr.sin_addr) != 1) {
-        fprintf(stderr, "inet_pton: invalid address\n");
-
-        close(sock);
-
-        return 1;
-    }
+    net_client c;
+    initialize_client(&c, ip, SERVER_PORT);
 
     char *message = "hello";
     size_t message_len = strlen(message);
 
-    ssize_t sent = sendto(sock, message, message_len, 0,
-                          (struct sockaddr *)&server_addr, sizeof(server_addr));
-
-    if (sent == -1) {
-        fprintf(stderr, "sendto: %s\n", strerror(errno));
-
-        close(sock);
-
-        return 1;
-    }
-
-    if ((size_t)sent != message_len) {
-        fprintf(stderr, "sendto: short write\n");
-    }
+    client_send_data(&c, NP_TYPE_HELLO, message, message_len);
 
     // TODO: not relative paths
     font_id font =
@@ -105,14 +68,17 @@ i32 main(i32 argc, char **argv) {
             player_action.shoot.click_pos = (vec2){x, y};
         }
 
-        struct sockaddr_in recv_addr;
-        socklen_t recv_addr_len = sizeof(recv_addr);
-        memset(&recv_addr, 0, sizeof(recv_addr));
+        net_pack *package = client_recv_data(&c);
+        if (!package) {
+            continue;
+        }
 
-        render_snapshot snapshot;
-        ssize_t n = recvfrom(sock, &snapshot, sizeof(snapshot) - 1, 0,
-                             (struct sockaddr *)&recv_addr, &recv_addr_len);
-        if (n != -1) {
+        switch (package->type) {
+        case NP_TYPE_DRAW_CMD: {
+            render_snapshot snapshot;
+            memcpy(&snapshot, package->data, package->size);
+            printf("Snapthot count: %d\n", snapshot.count);
+
             for (i32 i = 0; i < snapshot.count; i++) {
                 u32 w, h;
                 get_window_size(&w, &h);
@@ -174,19 +140,20 @@ i32 main(i32 argc, char **argv) {
                 } break;
                 }
             }
+            break;
+        }
         }
 
-        ssize_t sent =
-            sendto(sock, &player_action, sizeof(player_action), 0,
-                   (struct sockaddr *)&server_addr, sizeof(server_addr));
+        client_send_data(&c, NP_TYPE_PA, &player_action, sizeof(player_action));
 
+        free(package);
         swap_buffers();
     }
 
     texture_deinitialize(tex);
     font_deinitialize(font);
 
-    close(sock);
+    deinitialize_client(&c);
     quit();
 
     return 0;
